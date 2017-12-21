@@ -25,16 +25,16 @@ def delta_E(pos):
             n_neigh = [ne for j, ne in enumerate(n_neigh) if j != reverse_neigh_indices[k]]
             for temp in n_center:
                 temp = tuple(temp)
-                dE[k] -= lattice[temp]*lattice[tpos]*u11 + u00*((not lattice[temp])*(not lattice[tpos])) + u10*(lattice[temp] + lattice[tpos])*(not lattice[temp]*lattice[tpos])
-                dE[k] += lattice[temp]*lattice[tneigh]*u11 + u00*((not lattice[temp])*(not lattice[tneigh])) + u10*(lattice[temp] + lattice[tneigh])*(not lattice[temp]*lattice[tneigh])
+                dE[k] -= lattice[temp]*lattice[tpos]*u11 + u00*((not lattice[temp])*(not lattice[tpos])) #+ u10*(lattice[temp] + lattice[tpos])*(not lattice[temp]*lattice[tpos])
+                dE[k] += lattice[temp]*lattice[tneigh]*u11 + u00*((not lattice[temp])*(not lattice[tneigh])) #+ u10*(lattice[temp] + lattice[tneigh])*(not lattice[temp]*lattice[tneigh])
             for temp in n_neigh:
                 temp = tuple(temp)
-                dE[k] += lattice[temp]*lattice[tpos]*u11 + u00*((not lattice[temp])*(not lattice[tpos])) + u10*(lattice[temp] + lattice[tpos])*(not lattice[temp]*lattice[tpos])
-                dE[k] -= lattice[temp]*lattice[tneigh]*u11 + u00*((not lattice[temp])*(not lattice[tneigh])) + u10*(lattice[temp] + lattice[tneigh])*(not lattice[temp]*lattice[tneigh])
+                dE[k] += lattice[temp]*lattice[tpos]*u11 + u00*((not lattice[temp])*(not lattice[tpos])) #+ u10*(lattice[temp] + lattice[tpos])*(not lattice[temp]*lattice[tpos])
+                dE[k] -= lattice[temp]*lattice[tneigh]*u11 + u00*((not lattice[temp])*(not lattice[tneigh])) #+ u10*(lattice[temp] + lattice[tneigh])*(not lattice[temp]*lattice[tneigh])
     return dE
 
 # create 3d cubic lattice (NxNxN)
-N = 22
+N = 44
 lattice = p.zeros(N*N*N)
 # populate initially randomly with given number fraction
 x1 = 0.4 # x1: fraction of ones
@@ -47,11 +47,11 @@ percolator = SitePercolator3D(N, N, N, 0., 0., 0.)  # parameters are not needed,
 
 # let neighbors switch place with thermal activation (periodic boundary conditions)
 # Metropolis algorithm for updating
-maxsteps = 100000
-kT = 0.025*10.
+maxsteps = 10000000
+kT = 0.031
 u11 = -5.3 # in eV
 u00 = -4.3 # in eV
-u10 = -.3 # in eV
+u10 = 0. # in eV
 d_utransf = 0.00 # energy barrier for place exchange, in eV
 
 neighbor_kernel = n.array([[1,0,0], [-1,0,0], [0,1,0], [0,-1,0], [0,0,1], [0,0,-1]])
@@ -99,7 +99,7 @@ for i in range(maxsteps):
     #time.sleep(.5)
 
 percolator.is_occupied = lattice #*(-lattice) + 1 #- for passing ones and zeros inverted
-spanning, N_cl = percolator.spanning_cluster_exists(leave_cluster_marked=True)
+spanning, N_cl = percolator.spanning_cluster_exists(leave_cluster_marked=False)
 if spanning:
     print("Spanning cluster exists and consists of {0}% of total sites.".format(100*float(N_cl)/N/N/N))
 else:
@@ -108,7 +108,7 @@ else:
 # p.figure()
 # p.imshow(init_lattice, interpolation='none')
 # p.suptitle("Initial configuration")
-# p.figure()
-# p.imshow(lattice, interpolation='none')
-# p.suptitle("Final configuration")
-# p.show()
+p.figure()
+p.imshow(p.sum(lattice[:N//2], axis=0), interpolation='none', cmap=p.get_cmap('afmhot'))
+p.suptitle("Final configuration")
+p.show()

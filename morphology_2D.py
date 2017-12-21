@@ -55,7 +55,7 @@ maxsteps = 1000000
 kT = 0.025
 u11 = -5.3 # in eV
 u00 = -2.3 # in eV
-u10 = -1.3 # in eV
+u10 = -0. # in eV
 d_utransf = 0.00 # energy barrier for place exchange, in eV
 #p.ion()
 # p.figure()
