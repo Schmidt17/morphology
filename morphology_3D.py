@@ -50,7 +50,7 @@ percolator = SitePercolator3D(N, N, N, 0., 0., 0.)  # parameters are not needed,
 
 # let neighbors switch place with thermal activation (periodic boundary conditions)
 # Metropolis algorithm for updating
-maxsteps = 10000000
+maxsteps = 1000000
 kT = 0.031
 u11 = -.5 # in eV
 u00 = -.5 # in eV
@@ -69,6 +69,7 @@ neighbor_neighbors = n.array([[[2,0,0], [1,1,0], [1,-1,0], [1,0,1], [1,0,-1]],
 reverse_neigh_indices = {0:1, 1:0, 2:3, 3:2, 4:5, 5:4}
 
 # call Cython implementation
+
 print("Start Cython Metropolis with {0} steps".format(maxsteps))
 tstart = time.time()
 lattice = MC.metropolis(maxsteps, N, lattice, u11, u00, kT)

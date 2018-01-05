@@ -6,8 +6,9 @@ DTYPE_int = np.int
 ctypedef np.float_t DTYPE_t
 ctypedef np.int_t DTYPE_int_t
 
-cdef double get_dE(int cent, int neighk, int neighc, double u11, double u00):
-    return u11*(neighk*neighc - cent*neighc) + u00*((not neighk)*(not neighc) - (not cent)*(not neighc))
+cdef double get_dE(int cent, int neighc, double u11, double u00):
+    # use that this only gets executed when cent != neighk -> neighk = (not cent)
+    return u11*((not cent)*neighc - cent*neighc) + u00*(cent*(not neighc) - (not cent)*(not neighc))
 
 def metropolis(int nsteps, int N, np.ndarray[DTYPE_int_t, ndim=3] lattice, double u11, double u00, double kT):
     cdef np.ndarray[DTYPE_int_t, ndim=2] neighbor_kernel = np.array([[1,0,0], [-1,0,0], [0,1,0], [0,-1,0], [0,0,1], [0,0,-1]], dtype=DTYPE_int)
@@ -20,20 +21,17 @@ def metropolis(int nsteps, int N, np.ndarray[DTYPE_int_t, ndim=3] lattice, doubl
         dE = np.zeros(6, dtype=DTYPE) # initialize deltaE
         neighbors = (pos + neighbor_kernel) % N
         for k in range(6):
-            nn = (neighbors[k] + neighbor_kernel) % N
             neighk = lattice[neighbors[k,0],neighbors[k,1],neighbors[k,2]]
-            # center loop
-            for c in range(6):
-                if c != k:
-                    dE[k] += get_dE(cent,
-                                    neighk,
-                                    lattice[neighbors[c,0],neighbors[c,1],neighbors[c,2]], u11, u00)
-            # neighbor loop
-            for c in range(6):
-                if c != reverse_neigh_indices[k]:
-                    dE[k] += get_dE(cent,
-                                    neighk,
-                                    lattice[neighbors[c, 0], neighbors[c, 1], neighbors[c, 2]], u11, u00)
+            if neighk != cent:
+                nn = (neighbors[k] + neighbor_kernel) % N
+                # center loop
+                for c in range(6):
+                    if c != k:
+                        dE[k] += get_dE(cent, lattice[neighbors[c,0],neighbors[c,1],neighbors[c,2]], u11, u00)
+                # neighbor loop
+                for c in range(6):
+                    if c != reverse_neigh_indices[k]:
+                        dE[k] += get_dE(cent, lattice[neighbors[c,0], neighbors[c,1], neighbors[c,2]], u11, u00)
         probs = np.ones(6, dtype=DTYPE)
         for j in range(6):
             if dE[j] <= 0:
