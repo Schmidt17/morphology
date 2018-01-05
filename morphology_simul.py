@@ -32,7 +32,7 @@ maxsteps = 1000000
 kT = 0.025
 u11 = -1.3 # in eV
 u00 = -1.3 # in eV
-u10 = -1. # in eV
+u10 = -0. # in eV
 d_utransf = 0.00 # energy barrier for place exchange, in eV
 #p.ion()
 # p.figure()
@@ -94,10 +94,36 @@ if spanning:
 else:
     print("No spanning cluster found.")
 
+print("Calculating border distance distribution")
+# i) put border site positions (i.e. sites of 1 or 2 with at least one 0 neighbor) in an array and mark them with -1
+borderPositions1 = []
+for a in range(N):
+    for b in range(N):
+        if lattice[a, b] > 0:
+            neighbors = get_neighbors(a, b)
+            border = False
+            for neigh in neighbors:
+                if lattice[neigh] == 0:
+                    borderPositions1.append([a, b])
+                    lattice[a, b] = -1
+                    break
+borderPositions1 = p.array(borderPositions1)
+# ii) find closest distance to border site for each 1 and 2 (type one and spanning cluster or not)
+distances = []
+for a in range(N):
+    for b in range(N):
+        if lattice[a, b] > 0:
+            diffs = borderPositions1 - p.array([a, b])
+            minBorderDist = p.amin(p.sum((diffs*diffs).T, axis=0))
+            distances.append(p.sqrt(minBorderDist))
+# print(distances)
 p.figure()
 p.imshow(init_lattice, interpolation='none')
 p.suptitle("Initial configuration")
 p.figure()
 p.imshow(lattice, interpolation='none')
 p.suptitle("Final configuration")
+p.figure()
+p.hist(distances)
+p.suptitle("Distance distribution")
 p.show()
